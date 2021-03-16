@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>xhr test</title>
+    <!-- Insert Dynatrace Script here -->
+
+    <script type="text/javascript">
+      /**
+       * This script is where Dynatrace UI links and backend services are defined.
+       * To add a backend service, add an entry to the `services` array below.
+       */
+
+      // Base URL of Dynatrace web UI
+      var dynatraceBaseUrl = "https://elo29571.dev.dynatracelabs.com";
+
+      // Name and ID of this application
+      var applicationID = "APPLICATION-44D3EBDA69B500F1";
+      var applicationName = "RUM Lite Sample App";
+
+      // Adding an entry to this list will create a link to jump to the service and a button to call it
+      var services = [
+        {
+          name: "NodeJS",
+          serviceId: "SERVICE-7F0EB2D30D650C2D",
+          endpoint:
+            "https://xcdhedydaf.execute-api.us-east-1.amazonaws.com/dev/basic",
+        },
+      ];
+    </script>
+
+    <script type="text/javascript"></script>
+  </head>
+
+  <body>
+    <h1 id="application-name">RUM Lite Sample App</h1>
+    <div id="ui-links">
+      <!-- Automatically populated by script -->
+    </div>
+    <div id="service-call-buttons">
+      <!-- Automatically populated by script -->
+    </div>
+    <div>
+      <h3>Trace IDs:</h3>
+      <p>May take a minute for traces to be available in the Dynatrace UI</p>
+      <ul id="traces">
+        <!-- Automatically populated by script -->
+      </ul>
+    </div>
+    <script type="text/javascript">
+      // This script automatically populates the UI using the variables defined in the head
+      (() => {
+        const uiLinks = document.getElementById("ui-links");
+        const serviceCallButtons = document.getElementById(
+          "service-call-buttons"
+        );
+        const heading = document.getElementById("application-name");
+
+        heading.innerText = applicationName;
+        document.title = applicationName;
+
+        const appLink = document.createElement("a");
+        const appLinkP = document.createElement("p");
+
+        appLink.href = `${dynatraceBaseUrl}/#uemapplications/uemappmetrics;uemapplicationId=APPLICATION-44D3EBDA69B500F1;gtf=-30m;gf=all`;
+        appLink.target = "_blank";
+
+        appLinkP.appendChild(appLink);
+        uiLinks.appendChild(appLinkP);
+
+        for (const service of services) {
+          const uiLink = document.createElement("a");
+          const uiLinkP = document.createElement("p");
+
+          uiLink.href = `${dynatraceBaseUrl}/#newservices/serviceOverview;id=${service.serviceId};gf=all;gtf=-30m`;
+          uiLink.target = "_blank";
+          uiLink.innerText = `Jump to ${service.name} service`;
+
+          uiLinkP.appendChild(uiLink);
+          uiLinks.appendChild(uiLinkP);
+
+          const requestButton = document.createElement("button");
+          const requestButtonP = document.createElement("p");
+
+          requestButton.onclick = () => makeXhrCall(service);
+          requestButton.innerText = `Make a request to ${service.name}`;
+
+          requestButtonP.appendChild(requestButton);
+          serviceCallButtons.appendChild(requestButtonP);
+        }
+      })();
+
+      function makeXhrCall(service) {
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", service.endpoint, true);
+
+        xhr.onload = function () {
+          const { traceId } = JSON.parse(this.response);
+          console.log("trace ID", traceId);
+
+          const traceAnchor = document.createElement("a");
+          const productLink = `${dynatraceBaseUrl}/#servicecalls;servicefilter=0%1E41%11${traceId};gf=all;timeframe=custom${
+            Date.now() - 600000
+          }to${Date.now() + 60000}`;
+          traceAnchor.target = "_blank";
+          traceAnchor.innerText = traceId;
+          traceAnchor.href = productLink;
+          traceAnchor.style.fontFamily = "monospace";
+          traceAnchor.style.marginRight = "10px";
+
+          const li = document.createElement("li");
+          li.appendChild(traceAnchor);
+
+          const serviceName = document.createElement("span");
+          serviceName.innerText = service.name;
+          serviceName.style.marginRight = "10px";
+          li.appendChild(serviceName);
+
+          const time = document.createElement("span");
+          time.innerText = new Date().toLocaleTimeString();
+          li.appendChild(time);
+
+          document.getElementById("traces").appendChild(li);
+        };
+
+        xhr.send(null);
+      }
+    </script>
+  </body>
+</html>
